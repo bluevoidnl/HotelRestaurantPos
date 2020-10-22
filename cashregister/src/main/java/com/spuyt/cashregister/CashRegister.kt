@@ -16,25 +16,44 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
      * @return The change that was returned.
      */
     @Throws(TransactionException::class)
-
+    @Synchronized
     fun performTransaction(price: Long, paid: Map<Coin, Long>): Map<Coin, Long> {
         if (price <= 0L) throw TransactionException("0 or negative value transactions are not allowed")
         val valuePaid = paid.coinValue()
         if (valuePaid < price) throw TransactionException("paid too little $valuePaid $price")
 
-        val change = valuePaid - price
-         if (change == 0L) {
-
+        val changeValue = valuePaid - price
+        return if (changeValue == 0L) {
+            // it was an exact payment, add to cash and return 0 coins
+            cashContent.add(paid)
             mapOf()
         } else {
-            createChange(change, paid)
+            // create defensive copy, to be able too roll back if transaction fails
+            val cashContentCopy = cashContent.toMutableMap()
+            cashContentCopy.add(paid)
+            val changeCoins = createChange(changeValue, cashContentCopy)
+            // we were able to create changeCoins and can execute the transaction
+            // replace the current cashContent with the new one
+            cashContent.clear()
+            cashContent.add(cashContentCopy)
+            changeCoins
         }
     }
 
+    private fun createChange(
+        change: Long,
+        cashContentCopy: MutableMap<Coin, Long>
+    ): Map<Coin, Long> {
+        val changeOptions = generateChangeOptions(change)
+        throw TransactionException("not implemented yet")
+    }
 
 
-    private fun createChange(change: Long, paid: Map<Coin, Long>): Map<Coin, Long> {
-        cashContent.copy()
+    private fun generateChangeOptions(change: Long):Map<Long, Map<Coin, Long>>{
+        val changeOptions = mutableMapOf<Long, Map<Coin, Long>>()
+
+
+        return changeOptions
     }
 
     /**

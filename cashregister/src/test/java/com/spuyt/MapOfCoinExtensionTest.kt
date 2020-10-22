@@ -2,6 +2,7 @@ package com.spuyt
 
 import org.junit.Test
 import com.spuyt.cashregister.Coin
+import com.spuyt.cashregister.add
 import com.spuyt.cashregister.coinValue
 import org.junit.Assert
 
@@ -15,5 +16,13 @@ class MapOfCoinExtensionTest {
     fun test_CoinsMap_CorrectValue() {
         val paid = mapOf(Coin.TWO_EURO to 1L, Coin.ONE_EURO to 2L)
         Assert.assertEquals(400, paid.coinValue())
+    }
+
+    @Test
+    fun test_CoinsMaps_addCorrect(){
+        val register = mutableMapOf(Coin.TWO_EURO to 1L, Coin.ONE_EURO to 1L)
+        val paid = mapOf( Coin.ONE_EURO to 1L, Coin.FIFTY_CENT to 1L)
+        register.add(paid)
+        Assert.assertEquals(450, register.coinValue())
     }
 }
