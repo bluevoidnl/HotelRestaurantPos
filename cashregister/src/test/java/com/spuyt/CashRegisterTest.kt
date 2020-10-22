@@ -73,9 +73,12 @@ class CashRegisterTest {
     @Test
     fun test_payWithOneCoin_noChange() {
         val cashRegister = CashRegister()
+
         val paid = mapOf(Coin.ONE_EURO to 1L)
+        val expectedEndCashRegisterValue = cashRegister.getCashRegisterValue().plus(100)
         val change = cashRegister.performTransaction(100, paid)
         Assert.assertTrue(change.isEmpty())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 
     /**
@@ -85,8 +88,11 @@ class CashRegisterTest {
     fun test_payWithOneOfEach_noChange() {
         val cashRegister = CashRegister()
         val paid = getMapOfAllCoins(1L)
+        val expectedEndCashRegisterValue =
+            cashRegister.getCashRegisterValue().plus(VALUE_OF_ONE_COIN_OF_EACH)
         val change = cashRegister.performTransaction(VALUE_OF_ONE_COIN_OF_EACH, paid)
         Assert.assertTrue(change.isEmpty())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 
     /**
@@ -95,9 +101,11 @@ class CashRegisterTest {
     @Test
     fun test_payWithOnCoin_changeIsOneCoin() {
         val cashRegister = CashRegister(getMapOfAllCoins(20))
-        val paid = mapOf(Coin.TWO_EURO to 1L)
+        val paid = mapOf(Coin.ONE_EURO to 1L)
+        val expectedEndCashRegisterValue = cashRegister.getCashRegisterValue().plus(80)
         val change = cashRegister.performTransaction(80, paid)
         Assert.assertEquals(20, change.coinValue())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 
     /**
@@ -107,8 +115,10 @@ class CashRegisterTest {
     fun test_payWithOne_ChangeIsTwoSameCoins() {
         val cashRegister = CashRegister(getMapOfAllCoins(20))
         val paid = mapOf(Coin.ONE_EURO to 1L)
+        val expectedEndCashRegisterValue = cashRegister.getCashRegisterValue().plus(60)
         val change = cashRegister.performTransaction(60, paid)
         Assert.assertEquals(40, change.coinValue())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 
     /**
@@ -118,9 +128,11 @@ class CashRegisterTest {
     fun test_payTooMuch_changeContainsOneOfTooMuchPaid() {
         val cashRegister = CashRegister(getMapOfAllCoins(20))
         val paid = mapOf(Coin.TWO_EURO to 2L)
-        val change = cashRegister.performTransaction(23, paid)
+        val expectedEndCashRegisterValue = cashRegister.getCashRegisterValue().plus(12)
+        val change = cashRegister.performTransaction(12, paid)
         // change should be 387, 1 from each coin
         Assert.assertEquals(VALUE_OF_ONE_COIN_OF_EACH, change.coinValue())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 
     /**
@@ -131,8 +143,11 @@ class CashRegisterTest {
     fun test_payWithTwoOfEach_changeIsOneOfEach() {
         val cashRegister = CashRegister(getMapOfAllCoins(20))
         val paid = getMapOfAllCoins(2L)
+        val expectedEndCashRegisterValue =
+            cashRegister.getCashRegisterValue().plus(VALUE_OF_ONE_COIN_OF_EACH)
         val change = cashRegister.performTransaction(VALUE_OF_ONE_COIN_OF_EACH, paid)
         // change should be 387, 1 from each coin
         Assert.assertEquals(VALUE_OF_ONE_COIN_OF_EACH, change.coinValue())
+        Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
     }
 }

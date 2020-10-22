@@ -6,6 +6,9 @@ package com.spuyt.cashregister
  * @property change The current change in the cash register.
  */
 class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapOf()) {
+
+    fun getCashRegisterValue() = cashContent.coinValue()
+
     /**
      * Performs a transaction.
      *
@@ -32,8 +35,10 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
             val cashContentCopy = cashContent.toMutableMap()
             cashContentCopy.add(paid)
             val changeCoins = createChange(changeValue, cashContentCopy)
+
             // we were able to create changeCoins and can execute the transaction
             // replace the current cashContent with the new one
+            cashContentCopy.minus(changeCoins)
             cashContent.clear()
             cashContent.add(cashContentCopy)
             changeCoins
@@ -44,21 +49,57 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         change: Long,
         cashContentCopy: MutableMap<Coin, Long>
     ): Map<Coin, Long> {
-        val changeOptions = generateChangeOptions(change)
-        throw TransactionException("not implemented yet")
+        val changeOptions = mutableListOf<Map<Coin, Long>>()
+        generateChangeOptions(change, changeOptions, 0, mutableMapOf(), cashContentCopy)
+        if (changeOptions.isEmpty()) throw TransactionException("can not pay exact change")
+        else {
+            return changeOptions[0];
+        }
     }
 
-
-    private fun generateChangeOptions(change: Long):Map<Long, Map<Coin, Long>>{
-        val changeOptions = mutableMapOf<Long, Map<Coin, Long>>()
-
-
-        return changeOptions
+    private fun generateChangeOptions(
+        change: Long,
+        changeOptions: MutableList<Map<Coin, Long>>,
+        currentCoinOrdinal: Int,
+        currentChangeBuilding: MutableMap<Coin, Long>,
+        cashContent: Map<Coin, Long>
+    ) {
+        val currentCoin = Coin.values()[currentCoinOrdinal]
+        val maxCoins = cashContent[currentCoin] ?: 0
+        for (nrCoins: Long in 0..maxCoins) {
+            val newChangeBuilding = currentChangeBuilding.toMutableMap()
+            newChangeBuilding.add(mapOf(currentCoin to nrCoins))
+            val newValue = newChangeBuilding.coinValue()
+            when {
+                newValue < change -> { //ok new fork, try add next coin
+                    val newCoinOridinal = currentCoinOrdinal + 1
+                    if (newCoinOridinal < Coin.values().size) {
+                        generateChangeOptions(
+                            change,
+                            changeOptions,
+                            newCoinOridinal,
+                            newChangeBuilding,
+                            cashContent
+                        )
+                    } else {
+                        // we can not add more coins, give up this branche
+                    }
+                }
+                newValue == change -> { // we have a solution
+                    changeOptions.add(newChangeBuilding)
+                }
+                newValue < change -> {// dead end, do nothing
+                }
+            }
+        }
     }
+
 
     /**
      * Represents an error during a transaction.
      */
-    class TransactionException(message: String, cause: Throwable? = null) :
+    class TransactionException(
+        message: String, cause: Throwable? = null
+    ) :
         Exception(message, cause)
 }
