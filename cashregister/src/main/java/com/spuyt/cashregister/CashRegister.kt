@@ -54,7 +54,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
     }
 
     /**
-     * Recursive function to find change with the least coins possible.
+     * Recursive function to find change with the least coins possible. It tries to add the maximum nr of coins of each type.
      *
      *  @param changeValue The total value that the change should be.
      *  @param currentCoinOrdinal The ordinal of the Coin.values(): which coin to handle in this call.
@@ -72,39 +72,27 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         val currentCoin = Coin.values()[currentCoinOrdinal]
         val maxCoinsInCash = cashContent[currentCoin] ?: 0
         val currentValueInChange = currentChangeBuilding.coinValue()
-        val maxCurrentCoinsNeeded = (changeValue-currentValueInChange) / currentCoin.minorValue
+        val maxCurrentCoinsNeeded = (changeValue - currentValueInChange) / currentCoin.minorValue
         val maxCoins = min(maxCoinsInCash, maxCurrentCoinsNeeded)
 
         // start with most coins that are available and fit the remaining change to get a solution with the least coins
-        for (nrCoins: Long in maxCoins downTo 0) {
-            val newChangeBuilding = currentChangeBuilding.toMutableMap()
-            if (nrCoins > 0) {
-                newChangeBuilding.addCoin(mapOf(currentCoin to nrCoins))
-            }
-            val newValue = newChangeBuilding.coinValue()
-            when {
-                newValue < changeValue -> {
-                    // ok new fork, try add next coin
-                    val newCoinOrdinal = currentCoinOrdinal + 1
-                    if (newCoinOrdinal < Coin.values().size) {
-                        return findChangeWithLeastCoins(
-                            changeValue,
-                            newCoinOrdinal,
-                            availableCoins,
-                            newChangeBuilding
-                        )
-                    } else {
-                        // no coins can be added, give up this branche
-                    }
-                }
-                // we have a solution
-                newValue == changeValue -> return newChangeBuilding
-                newValue > changeValue -> {
-                    // dead end, do nothing
-                }
-            }
+        val newChangeBuilding = currentChangeBuilding.toMutableMap()
+        if (maxCoins > 0) {
+            newChangeBuilding.addCoin(mapOf(currentCoin to maxCoins))
         }
-        return null
+        return if (newChangeBuilding.coinValue() == changeValue) {
+            newChangeBuilding
+        } else if (currentCoinOrdinal + 1 < Coin.values().size) {
+            // add next coin denomination
+            findChangeWithLeastCoins(
+                changeValue,
+                currentCoinOrdinal + 1,
+                availableCoins,
+                newChangeBuilding
+            )
+        } else {
+            null // all coins were tested and non remain: no solution possible
+        }
     }
 
     /**
