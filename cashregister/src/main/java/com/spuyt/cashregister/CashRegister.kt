@@ -1,5 +1,7 @@
 package com.spuyt.cashregister
 
+import java.lang.Long.min
+
 /**
  * A cash register.
  *
@@ -53,6 +55,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         generateChangeOptions(change, changeOptions, 0, mutableMapOf(), cashContentCopy)
         if (changeOptions.isEmpty()) throw TransactionException("can not pay exact change")
         else {
+            println(changeOptions.size)
             return changeOptions[0];
         }
     }
@@ -65,10 +68,16 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         cashContent: Map<Coin, Long>
     ) {
         val currentCoin = Coin.values()[currentCoinOrdinal]
-        val maxCoins = cashContent[currentCoin] ?: 0
-        for (nrCoins: Long in 0..maxCoins) {
+        val maxCoinsInCash = cashContent[currentCoin] ?: 0
+        val maxCurrentCoin = change / currentCoin.minorValue
+        val maxCoins = min(maxCoinsInCash, maxCurrentCoin)
+
+        // start with most coins that fit the remaining change
+        for (nrCoins: Long in maxCoins downTo 0) {
             val newChangeBuilding = currentChangeBuilding.toMutableMap()
-            newChangeBuilding.add(mapOf(currentCoin to nrCoins))
+            if (nrCoins > 0) {
+                newChangeBuilding.add(mapOf(currentCoin to nrCoins))
+            }
             val newValue = newChangeBuilding.coinValue()
             when {
                 newValue < change -> { //ok new fork, try add next coin
@@ -88,8 +97,11 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
                 newValue == change -> { // we have a solution
                     changeOptions.add(newChangeBuilding)
                 }
-                newValue < change -> {// dead end, do nothing
+                newValue > change -> {// dead end, do nothing
                 }
+            }
+            if(changeOptions.isNotEmpty()){
+                return
             }
         }
     }
