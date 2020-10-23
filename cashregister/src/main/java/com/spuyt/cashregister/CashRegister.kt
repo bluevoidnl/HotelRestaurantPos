@@ -30,12 +30,12 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         val changeValue = valuePaid - price
         return if (changeValue == 0L) {
             // it was an exact payment, add to cash and return 0 coins
-            cashContent.add(paid)
+            cashContent.addCoin(paid)
             mapOf()
         } else {
             // create defensive copy, to be able too roll back if transaction fails
             val cashContentCopy = cashContent.toMutableMap()
-            cashContentCopy.add(paid)
+            cashContentCopy.addCoin(paid)
 
             val changeOptions = mutableListOf<Map<Coin, Long>>()
             generateChangeOptions(changeValue, changeOptions, 0, mutableMapOf(), cashContentCopy)
@@ -45,9 +45,9 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
                 val changeCoins = changeOptions[0]
                 // we were able to create changeCoins and can execute the transaction
                 // replace the current cashContent with the new one
-                cashContentCopy.minus(changeCoins)
+                cashContentCopy.minusCoin(changeCoins)
                 cashContent.clear()
-                cashContent.add(cashContentCopy)
+                cashContent.addCoin(cashContentCopy)
                 changeCoins
             }
         }
@@ -69,7 +69,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         for (nrCoins: Long in maxCoins downTo 0) {
             val newChangeBuilding = currentChangeBuilding.toMutableMap()
             if (nrCoins > 0) {
-                newChangeBuilding.add(mapOf(currentCoin to nrCoins))
+                newChangeBuilding.addCoin(mapOf(currentCoin to nrCoins))
             }
             val newValue = newChangeBuilding.coinValue()
             when {

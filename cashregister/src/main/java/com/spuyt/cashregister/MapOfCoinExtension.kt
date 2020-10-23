@@ -4,7 +4,7 @@ fun Map<Coin, Long>.coinValue() = this.entries.map { it.value.times(it.key.minor
 
 fun Map<Coin, Long>.numberOfCoins() = this.values.sum()
 
-fun MutableMap<Coin, Long>.add(other: Map<Coin, Long>) {
+fun MutableMap<Coin, Long>.addCoin(other: Map<Coin, Long>) {
     Coin.values().forEach { coin ->
         val add = other[coin]
         if (add != null) {
@@ -18,16 +18,16 @@ fun MutableMap<Coin, Long>.add(other: Map<Coin, Long>) {
     }
 }
 
-fun MutableMap<Coin, Long>.minus(other: Map<Coin, Long>) {
+fun MutableMap<Coin, Long>.minusCoin(other: Map<Coin, Long>) {
     Coin.values().forEach { coin ->
         val minus = other[coin]
         if (minus != null) {
             val old = this[coin]
             if (old == null) {
-                throw CashRegister.TransactionException("can not have negative coin")
+                throw CashRegister.TransactionException("No coin to subtract from")
             } else {
                 val newVal = old.minus(minus)
-                if (newVal < 0L) throw CashRegister.TransactionException("can not have negative coin")
+                if (newVal < 0L) throw CashRegister.TransactionException("Can not have negative coin")
                 else {
                     this[coin] = newVal
                 }
