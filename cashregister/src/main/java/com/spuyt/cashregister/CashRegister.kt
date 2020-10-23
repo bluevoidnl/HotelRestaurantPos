@@ -5,7 +5,7 @@ import java.lang.Long.min
 /**
  * A cash register.
  *
- * @property change The current change in the cash register.
+ * @property cashContent The current change in the cash register.
  */
 class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapOf()) {
 
@@ -36,27 +36,20 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
             // create defensive copy, to be able too roll back if transaction fails
             val cashContentCopy = cashContent.toMutableMap()
             cashContentCopy.add(paid)
-            val changeCoins = createChange(changeValue, cashContentCopy)
 
-            // we were able to create changeCoins and can execute the transaction
-            // replace the current cashContent with the new one
-            cashContentCopy.minus(changeCoins)
-            cashContent.clear()
-            cashContent.add(cashContentCopy)
-            changeCoins
-        }
-    }
-
-    private fun createChange(
-        change: Long,
-        cashContentCopy: MutableMap<Coin, Long>
-    ): Map<Coin, Long> {
-        val changeOptions = mutableListOf<Map<Coin, Long>>()
-        generateChangeOptions(change, changeOptions, 0, mutableMapOf(), cashContentCopy)
-        if (changeOptions.isEmpty()) throw TransactionException("can not pay exact change")
-        else {
-            println(changeOptions.size)
-            return changeOptions[0];
+            val changeOptions = mutableListOf<Map<Coin, Long>>()
+            generateChangeOptions(changeValue, changeOptions, 0, mutableMapOf(), cashContentCopy)
+            if (changeOptions.isEmpty()) {
+                throw TransactionException("can not pay exact change")
+            } else {
+                val changeCoins = changeOptions[0]
+                // we were able to create changeCoins and can execute the transaction
+                // replace the current cashContent with the new one
+                cashContentCopy.minus(changeCoins)
+                cashContent.clear()
+                cashContent.add(cashContentCopy)
+                changeCoins
+            }
         }
     }
 
@@ -80,13 +73,14 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
             }
             val newValue = newChangeBuilding.coinValue()
             when {
-                newValue < change -> { //ok new fork, try add next coin
-                    val newCoinOridinal = currentCoinOrdinal + 1
-                    if (newCoinOridinal < Coin.values().size) {
+                newValue < change -> {
+                    // ok new fork, try add next coin
+                    val newCoinOrdinal = currentCoinOrdinal + 1
+                    if (newCoinOrdinal < Coin.values().size) {
                         generateChangeOptions(
                             change,
                             changeOptions,
-                            newCoinOridinal,
+                            newCoinOrdinal,
                             newChangeBuilding,
                             cashContent
                         )
@@ -94,18 +88,20 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
                         // we can not add more coins, give up this branche
                     }
                 }
-                newValue == change -> { // we have a solution
+                newValue == change -> {
+                    // we have a solution
                     changeOptions.add(newChangeBuilding)
+                    return
                 }
-                newValue > change -> {// dead end, do nothing
+                newValue > change -> {
+                    // dead end, do nothing
                 }
             }
-            if(changeOptions.isNotEmpty()){
+            if (changeOptions.isNotEmpty()) {
                 return
             }
         }
     }
-
 
     /**
      * Represents an error during a transaction.

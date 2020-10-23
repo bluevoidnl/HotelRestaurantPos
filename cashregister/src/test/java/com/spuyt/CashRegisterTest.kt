@@ -7,6 +7,7 @@ import com.spuyt.cashregister.numberOfCoins
 import org.junit.Assert
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import kotlin.random.Random
 
 class CashRegisterTest {
     companion object {
@@ -130,7 +131,22 @@ class CashRegisterTest {
     }
 
     /**
-     * Test getting 2 of the same coin back
+     * Test paying 1 to 1000 cents, get correct change back
+     */
+    @Test
+    fun test_payPriceOf1To1000cents_ChangeIsCorrect() {
+        for (price in 1L..1000L) {
+            val cashRegister = CashRegister(getMapOfAllCoins(20))
+            val paid = getMapOfAllCoins(3)
+            val expectedEndCashRegisterValue = cashRegister.getCashRegisterValue().plus(price)
+            val change = cashRegister.performTransaction(price, paid)
+            Assert.assertEquals(paid.coinValue() - price, change.coinValue())
+            Assert.assertEquals(expectedEndCashRegisterValue, cashRegister.getCashRegisterValue())
+        }
+    }
+
+    /**
+     * Test getting 6 of the same coin back, when there are some coins missing in the cashRegister
      */
     @Test
     fun test_payWhenCashRegisterHasLimitedCoins_ChangeIs6Times20CentsCoin() {
@@ -164,7 +180,7 @@ class CashRegisterTest {
 
     /**
      * Test getting all extra coins back that you give too much
-     * Pay 387 with 2 coins from each, expect 1 coin from each back
+     * Pay 388 with 2 coins from each, expect 1 coin from each back
      */
     @Test
     fun test_payWithTwoOfEach_changeIsOneOfEach() {
