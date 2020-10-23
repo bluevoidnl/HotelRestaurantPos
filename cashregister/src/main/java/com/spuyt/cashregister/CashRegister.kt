@@ -16,7 +16,8 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
      *
      * @param price The price of the goods.
      * @param paid The amount paid by the customer.
-     * @throws TransactionException If the transaction cannot be performed.
+     * @throws TransactionException If the transaction cannot be performed,
+     * eg: Price is negative or zero, Too little coin paid or No exact change can be returned
      *
      * @return The change that was returned.
      */
@@ -25,7 +26,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
     fun performTransaction(price: Long, paid: Map<Coin, Long>): Map<Coin, Long> {
         if (price <= 0L) throw TransactionException("0 or negative value transactions are not allowed")
         val valuePaid = paid.coinValue()
-        if (valuePaid < price) throw TransactionException("paid too little $valuePaid $price")
+        if (valuePaid < price) throw TransactionException("Paid too little $valuePaid $price")
 
         val changeValue = valuePaid - price
         return if (changeValue == 0L) {
@@ -33,39 +34,48 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
             cashContent.addCoin(paid)
             mapOf()
         } else {
-            // create defensive copy, to be able too roll back if transaction fails
-            val cashContentCopy = cashContent.toMutableMap()
-            cashContentCopy.addCoin(paid)
+            // Too many coin can be given so some of the coins that were paid need to be given back,
+            // add these to the set of possible coins to pay with.
+            // Create defensive copy, to be able too roll back if transaction fails
+            val availableCoins = cashContent.toMutableMap()
+            availableCoins.addCoin(paid)
 
-            val changeOptions = mutableListOf<Map<Coin, Long>>()
-            generateChangeOptions(changeValue, changeOptions, 0, mutableMapOf(), cashContentCopy)
-            if (changeOptions.isEmpty()) {
-                throw TransactionException("can not pay exact change")
+            val changeCoins =
+                findChangeWithLeastCoins(changeValue, 0, availableCoins)
+            if (changeCoins == null) {
+                throw TransactionException("Can not pay exact change")
             } else {
-                val changeCoins = changeOptions[0]
-                // we were able to create changeCoins and can execute the transaction
-                // replace the current cashContent with the new one
-                cashContentCopy.minusCoin(changeCoins)
-                cashContent.clear()
-                cashContent.addCoin(cashContentCopy)
+                // changeCoins are available and the transaction can be execute
+                cashContent.addCoin(paid)
+                cashContent.minusCoin(changeCoins)
                 changeCoins
             }
         }
     }
 
-    private fun generateChangeOptions(
-        change: Long,
-        changeOptions: MutableList<Map<Coin, Long>>,
+    /**
+     * Recursive function to find change with the least coins possible.
+     *
+     *  @param changeValue The total value that the change should be.
+     *  @param currentCoinOrdinal The ordinal of the Coin.values(): which coin to handle in this call.
+     *  @param currentChangeBuilding The set of coins that were added already.
+     *  @param availableCoins The total set of coins that can be used to generate the change.
+     *
+     *  @return The Map of coins representing the change, null if no solution is possible
+     */
+    private fun findChangeWithLeastCoins(
+        changeValue: Long,
         currentCoinOrdinal: Int,
-        currentChangeBuilding: MutableMap<Coin, Long>,
-        cashContent: Map<Coin, Long>
-    ) {
+        availableCoins: Map<Coin, Long>,
+        currentChangeBuilding: MutableMap<Coin, Long> = mutableMapOf()
+    ): Map<Coin, Long>? {
         val currentCoin = Coin.values()[currentCoinOrdinal]
         val maxCoinsInCash = cashContent[currentCoin] ?: 0
-        val maxCurrentCoin = change / currentCoin.minorValue
-        val maxCoins = min(maxCoinsInCash, maxCurrentCoin)
+        val currentValueInChange = currentChangeBuilding.coinValue()
+        val maxCurrentCoinsNeeded = (changeValue-currentValueInChange) / currentCoin.minorValue
+        val maxCoins = min(maxCoinsInCash, maxCurrentCoinsNeeded)
 
-        // start with most coins that fit the remaining change
+        // start with most coins that are available and fit the remaining change to get a solution with the least coins
         for (nrCoins: Long in maxCoins downTo 0) {
             val newChangeBuilding = currentChangeBuilding.toMutableMap()
             if (nrCoins > 0) {
@@ -73,34 +83,28 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
             }
             val newValue = newChangeBuilding.coinValue()
             when {
-                newValue < change -> {
+                newValue < changeValue -> {
                     // ok new fork, try add next coin
                     val newCoinOrdinal = currentCoinOrdinal + 1
                     if (newCoinOrdinal < Coin.values().size) {
-                        generateChangeOptions(
-                            change,
-                            changeOptions,
+                        return findChangeWithLeastCoins(
+                            changeValue,
                             newCoinOrdinal,
-                            newChangeBuilding,
-                            cashContent
+                            availableCoins,
+                            newChangeBuilding
                         )
                     } else {
-                        // we can not add more coins, give up this branche
+                        // no coins can be added, give up this branche
                     }
                 }
-                newValue == change -> {
-                    // we have a solution
-                    changeOptions.add(newChangeBuilding)
-                    return
-                }
-                newValue > change -> {
+                // we have a solution
+                newValue == changeValue -> return newChangeBuilding
+                newValue > changeValue -> {
                     // dead end, do nothing
                 }
             }
-            if (changeOptions.isNotEmpty()) {
-                return
-            }
         }
+        return null
     }
 
     /**

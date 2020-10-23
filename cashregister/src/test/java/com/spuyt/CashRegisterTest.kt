@@ -7,7 +7,6 @@ import com.spuyt.cashregister.numberOfCoins
 import org.junit.Assert
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import kotlin.random.Random
 
 class CashRegisterTest {
     companion object {
