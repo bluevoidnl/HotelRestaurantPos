@@ -36,7 +36,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
         } else {
             // Too many coin can be given so some of the coins that were paid need to be given back,
             // add these to the set of possible coins to pay with.
-            // Create defensive copy, to be able too roll back if transaction fails
+            // Create defensive copy, to be able to roll back if transaction fails
             val availableCoins = cashContent.toMutableMap()
             availableCoins.addCoin(paid)
 
