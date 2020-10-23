@@ -183,7 +183,7 @@ class CashRegisterTest {
      */
     @Test
     fun test_payWithTwoOfEach_changeIsOneOfEach() {
-        val cashRegister = CashRegister(getMapOfAllCoins(20))
+        val cashRegister = CashRegister(getMapOfAllCoins(0))
         val paid = getMapOfAllCoins(2L)
         val expectedEndCashRegisterValue =
             cashRegister.getCashRegisterValue().plus(VALUE_OF_ONE_COIN_OF_EACH)

@@ -67,7 +67,7 @@ class CashRegister(private val cashContent: MutableMap<Coin, Long> = mutableMapO
     ): Map<Coin, Long>? {
         val currentChangeBuilding: MutableMap<Coin, Long> = mutableMapOf()
         Coin.values().forEach { currentCoin ->
-            val maxCoinsInCash = cashContent[currentCoin] ?: 0
+            val maxCoinsInCash = availableCoins[currentCoin] ?: 0
             val remainingChangeToAdd = changeValue - currentChangeBuilding.coinValue()
             val maxCurrentCoinsNeeded = remainingChangeToAdd / currentCoin.minorValue
             val maxCoins = min(maxCoinsInCash, maxCurrentCoinsNeeded)
