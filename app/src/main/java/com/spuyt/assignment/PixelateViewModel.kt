@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.Log
 import androidx.core.graphics.get
 import androidx.core.graphics.set
 import androidx.lifecycle.MutableLiveData
@@ -45,7 +46,8 @@ class PixelateViewModel : ViewModel() {
         val w = image.width
         val h = image.height
 
-        // todo: fix rounding error
+       Log.i("xxx","$w $h")
+
         val blockSize = w / nrBlocks
         val targetW = (w / blockSize)
         val targetH = (h / blockSize)
@@ -55,8 +57,8 @@ class PixelateViewModel : ViewModel() {
         for (wIndex in 0 until targetW) {
             for (hIndex in 0 until targetH+1) {
                 createPixel(blockSize, wIndex, hIndex, image, targetImage)
+               
             }
-
             pixelatedImage.postValue(targetImage)
         }
         return targetImage
@@ -90,14 +92,16 @@ class PixelateViewModel : ViewModel() {
                 }
             }
         }
-        val blockColor = Color.argb(255, redSum / pixelsInBlock, greenSum / pixelsInBlock, blueSum / pixelsInBlock)
-        for (x: Int in startX..endX) {
-            val startY = hIndex * blockSize
-            val endY = blockSize + startY - 1
-            //println("$startY $endY ${image.height}")
-            for (y: Int in startY..endY) {
-                if(y<targetImage.height) {
-                    targetImage[x, y] = blockColor
+        if(pixelsInBlock >0) {
+            val blockColor = Color.argb(255, redSum / pixelsInBlock, greenSum / pixelsInBlock, blueSum / pixelsInBlock)
+            for (x: Int in startX..endX) {
+                val startY = hIndex * blockSize
+                val endY = blockSize + startY - 1
+                //println("$startY $endY ${image.height}")
+                for (y: Int in startY..endY) {
+                    if (y < targetImage.height) {
+                        targetImage[x, y] = blockColor
+                    }
                 }
             }
         }

@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     val viewModel: PixelateViewModel by viewModels()
 
-    lateinit var textureView: TextureView
+    lateinit var textureView: AutoFitTextureView
     lateinit var takePictureButton: Button
 
     var cameraDevice: CameraDevice? = null
@@ -102,17 +102,12 @@ class MainActivity : AppCompatActivity() {
         viewModel.pixelatedImage.observe(this) { image.post { image.setImageBitmap(it) } }
 
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
-        // todo: set initial value correct
-
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar) {
             }
-
             override fun onStopTrackingTouch(seekBar: SeekBar) {
-                //Toast.makeText(this@MainActivity, "${seekBar.progress}", Toast.LENGTH_SHORT).show()
                 viewModel.setNrBLocks(seekBar.progress )
             }
         })
@@ -120,10 +115,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        thread {
-            // todo: remove test code
-            viewModel.pixelateTestImage(this)
-        }
         startBackgroundThread()
         if (textureView.isAvailable) {
             openCamera()
@@ -170,8 +161,10 @@ class MainActivity : AppCompatActivity() {
             val cameraId = manager.cameraIdList[0]
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-            imageDimension = map.getOutputSizes(SurfaceTexture::class.java)[0]
-
+            val sizes = map.getOutputSizes(SurfaceTexture::class.java)
+            imageDimension = sizes[0]
+            textureView.setAspectRatio(imageDimension.height,imageDimension.width )
+            Log.i("xxx", "$imageDimension")
             val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             if (permission != PackageManager.PERMISSION_GRANTED) {
                 return
