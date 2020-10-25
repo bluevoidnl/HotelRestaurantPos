@@ -14,7 +14,6 @@ import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
-import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -113,8 +112,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
-                Toast.makeText(this@MainActivity, "${seekBar.progress}", Toast.LENGTH_SHORT).show()
-                viewModel.setNrBLocks(seekBar.progress + 1) // +1 to avoid 0
+                //Toast.makeText(this@MainActivity, "${seekBar.progress}", Toast.LENGTH_SHORT).show()
+                viewModel.setNrBLocks(seekBar.progress )
             }
         })
     }

@@ -53,9 +53,10 @@ class PixelateViewModel : ViewModel() {
         val targetImage = image.copy(Bitmap.Config.ARGB_8888, true)
         // val targetImage = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         for (wIndex in 0 until targetW) {
-            for (hIndex in 0 until targetH) {
+            for (hIndex in 0 until targetH+1) {
                 createPixel(blockSize, wIndex, hIndex, image, targetImage)
             }
+
             pixelatedImage.postValue(targetImage)
         }
         return targetImage
@@ -71,6 +72,7 @@ class PixelateViewModel : ViewModel() {
         var redSum = 0
         var blueSum = 0
         var greenSum = 0
+        var pixelsInBlock=0
         val startX = wIndex * blockSize
         val endX = blockSize + startX - 1
         //println("$startX $endX ${image.width}")
@@ -79,20 +81,24 @@ class PixelateViewModel : ViewModel() {
             val endY = blockSize + startY - 1
             //println("$startY $endY ${image.height}")
             for (y: Int in startY..endY) {
-                val intColor = image[x, y]
-                redSum += Color.red(intColor)
-                blueSum += Color.blue(intColor)
-                greenSum += Color.green(intColor)
+                if(y<image.height) {
+                    val intColor = image[x, y]
+                    redSum += Color.red(intColor)
+                    blueSum += Color.blue(intColor)
+                    greenSum += Color.green(intColor)
+                    pixelsInBlock++
+                }
             }
         }
-        val pixelsInBlock = blockSize * blockSize
         val blockColor = Color.argb(255, redSum / pixelsInBlock, greenSum / pixelsInBlock, blueSum / pixelsInBlock)
         for (x: Int in startX..endX) {
             val startY = hIndex * blockSize
             val endY = blockSize + startY - 1
             //println("$startY $endY ${image.height}")
             for (y: Int in startY..endY) {
-                targetImage[x, y] = blockColor
+                if(y<targetImage.height) {
+                    targetImage[x, y] = blockColor
+                }
             }
         }
     }

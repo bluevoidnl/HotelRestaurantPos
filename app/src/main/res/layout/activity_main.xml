@@ -25,6 +25,9 @@
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
+        android:min="4"
+        android:progress="20"
+        android:max="70"
         android:layout_height="wrap_content" />
 
     <ImageView
