@@ -11,8 +11,8 @@ import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
+import androidx.databinding.DataBindingUtil
 import android.view.Surface
-import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.widget.Button
 import android.widget.ImageView
@@ -22,7 +22,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.observe
-import kotlin.concurrent.thread
+import com.spuyt.assignment.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
@@ -32,13 +32,10 @@ class MainActivity : AppCompatActivity() {
         const val TAG = "MainActivity"
     }
 
-    val viewModel: PixelateViewModel by viewModels()
+    private val viewModel: PixelateViewModel by viewModels()
 
-    lateinit var textureView: AutoFitTextureView
-    lateinit var takePictureButton: Button
-
-    var cameraDevice: CameraDevice? = null
-    lateinit var imageDimension: Size
+    private var cameraDevice: CameraDevice? = null
+    private lateinit var imageDimension: Size
 
     // todo: check HandlerThread : to coroutine?
     private var mBackgroundHandler: Handler? = null
@@ -88,27 +85,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        textureView = findViewById(R.id.texture)
-        textureView.surfaceTextureListener = textureListener
-        takePictureButton = findViewById(R.id.btn_takepicture)
-        takePictureButton.setOnClickListener {
-            val bitmap = textureView.bitmap
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.lifecycleOwner = this
+        binding.viewModel=viewModel
+
+        binding.texture.surfaceTextureListener = textureListener
+        binding.btnTakepicture.setOnClickListener {
+            val bitmap = binding.texture.bitmap
             viewModel.setPhotoBitmap(bitmap)
         }
-        val image = findViewById<ImageView>(R.id.pix)
-        viewModel.pixelatedImage.observe(this) { image.post { image.setImageBitmap(it) } }
 
-        val seekBar = findViewById<SeekBar>(R.id.seekBar)
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        viewModel.pixelatedImage.observe(this) { binding.pix.post { binding.pix.setImageBitmap(it) } }
+
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar) {
             }
+
             override fun onStopTrackingTouch(seekBar: SeekBar) {
-                viewModel.setNrBLocks(seekBar.progress )
+                viewModel.setNrBLocks(seekBar.progress)
             }
         })
     }
@@ -116,10 +116,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         startBackgroundThread()
-        if (textureView.isAvailable) {
+        if (binding.texture.isAvailable) {
             openCamera()
         } else {
-            textureView.surfaceTextureListener = textureListener
+            binding.texture.surfaceTextureListener = textureListener
         }
 
         // Add permission for camera and let user grant the permission
@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity() {
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
             val sizes = map.getOutputSizes(SurfaceTexture::class.java)
             imageDimension = sizes[0]
-            textureView.setAspectRatio(imageDimension.height,imageDimension.width )
+            binding.texture.setAspectRatio(imageDimension.height, imageDimension.width)
             Log.i("xxx", "$imageDimension")
             val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             if (permission != PackageManager.PERMISSION_GRANTED) {
@@ -178,7 +178,7 @@ class MainActivity : AppCompatActivity() {
 
     fun createCameraPreview(camera: CameraDevice) {
         try {
-            val texture = textureView.surfaceTexture!!
+            val texture = binding.texture.surfaceTexture
             texture.setDefaultBufferSize(imageDimension.width, imageDimension.height)
             val surface = Surface(texture)
             val captureRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)

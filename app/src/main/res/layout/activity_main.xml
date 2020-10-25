@@ -1,44 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10dp"
-    tools:context=".MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.spuyt.assignment.AutoFitTextureView
-        android:id="@+id/texture"
-        android:layout_gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        />
+    <data>
 
-    <Button
-        android:id="@+id/btn_takepicture"
+        <import type="android.view.View" />
+
+        <variable
+            name="viewModel"
+            type="com.spuyt.assignment.PixelateViewModel" />
+    </data>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="@string/take_picture" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp"
+        tools:context=".MainActivity">
 
-    <SeekBar
-        android:id="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:min="4"
-        android:progress="20"
-        android:max="70"
-        android:layout_height="wrap_content" />
+        <com.spuyt.assignment.AutoFitTextureView
+            android:id="@+id/texture"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1" />
 
-    <ImageView
-        android:id="@+id/pix"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1"
-        android:scaleType="fitCenter"
-        />
+        <Button
+            android:id="@+id/btn_takepicture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:text="@string/take_picture" />
 
-</LinearLayout>
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="70"
+            android:min="4"
+            android:progress="20" />
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1">
+
+            <ImageView
+                android:id="@+id/pix"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:id="@+id/scanline"
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:background="@color/red"
+                android:translationX="@{viewModel.pixelationProgress}"
+                android:visibility="@{viewModel.pixelationProgress>0? View.VISIBLE: View.GONE}" />
+        </FrameLayout>
+
+    </LinearLayout>
+</layout>

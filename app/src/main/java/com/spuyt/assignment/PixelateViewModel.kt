@@ -15,6 +15,7 @@ import kotlin.concurrent.thread
 class PixelateViewModel : ViewModel() {
 
     val pixelatedImage = MutableLiveData<Bitmap>()
+    val pixelationProgress = MutableLiveData<Int>()
     //val pixelatedImage = MutableLiveData<Resource<Bitmap>>()
 
     private var lastPhotoBitmap: Bitmap? = null
@@ -37,6 +38,7 @@ class PixelateViewModel : ViewModel() {
                 val pixBitmap = pixelate(it, nrBlocks)
                 //pixelatedImage.postValue(Resource.Success(pixBitmap))
                 pixelatedImage.postValue(pixBitmap)
+                pixelationProgress.postValue(-1)
             }
         }
     }
@@ -55,11 +57,13 @@ class PixelateViewModel : ViewModel() {
         val targetImage = image.copy(Bitmap.Config.ARGB_8888, true)
         // val targetImage = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         for (wIndex in 0 until targetW) {
+            var endX=0
             for (hIndex in 0 until targetH+1) {
-                createPixel(blockSize, wIndex, hIndex, image, targetImage)
-               
+                 endX=createPixel(blockSize, wIndex, hIndex, image, targetImage)
             }
             pixelatedImage.postValue(targetImage)
+            pixelationProgress.postValue(endX)
+
         }
         return targetImage
     }
@@ -70,7 +74,7 @@ class PixelateViewModel : ViewModel() {
         pixelateImage()
     }
 
-    private fun createPixel(blockSize: Int, wIndex: Int, hIndex: Int, image: Bitmap, targetImage: Bitmap) {
+    private fun createPixel(blockSize: Int, wIndex: Int, hIndex: Int, image: Bitmap, targetImage: Bitmap): Int {
         var redSum = 0
         var blueSum = 0
         var greenSum = 0
@@ -105,5 +109,6 @@ class PixelateViewModel : ViewModel() {
                 }
             }
         }
+        return endX
     }
 }
