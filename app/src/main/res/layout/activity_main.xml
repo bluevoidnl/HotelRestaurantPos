@@ -54,7 +54,7 @@
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter" />
-
+            
             <View
                 android:id="@+id/scanline"
                 android:layout_width="3dp"

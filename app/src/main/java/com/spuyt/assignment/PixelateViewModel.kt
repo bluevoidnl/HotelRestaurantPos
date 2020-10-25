@@ -36,10 +36,7 @@ class PixelateViewModel : ViewModel() {
     private fun pixelateImage() {
         lastPhotoBitmap?.let {
             viewModelScope.launch(Dispatchers.Default) {
-                pixelateJob?.let {
-                    // cancel the current job if any and wait for completion
-                    it.cancelAndJoin()
-                }
+                pixelateJob?.cancelAndJoin()
                 // start pixelation job
                 pixelateJob = viewModelScope.launch(Dispatchers.Default) {
                     val pixBitmap = pixelate(it, nrBlocks)
@@ -58,7 +55,6 @@ class PixelateViewModel : ViewModel() {
         val blockSize = w / nrBlocks
         val targetW = (w / blockSize)
         val targetH = (h / blockSize)
-        //println("$W $H $blockSize target $targetW $targetH")
         val targetImage = image.copy(Bitmap.Config.ARGB_8888, true)
         for (wIndex in 0 until targetW) {
             var endX = 0

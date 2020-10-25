@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.texture.surfaceTextureListener = textureListener
         binding.btnTakepicture.setOnClickListener {
+            // take the bitmap from the texture, set it to the viewmodel so it can be pixelated
             val bitmap = binding.texture.bitmap
             viewModel.setPhotoBitmap(bitmap)
         }
@@ -89,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                     binding.pix.post { binding.pix.setImageBitmap(it.intermediateResult) }
                 }
                 is Resource.Error -> {
-                    Toast.makeText(this@MainActivity, "Error creating pixelated Image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.pixelation_error), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -199,6 +200,7 @@ class MainActivity : AppCompatActivity() {
             }, null)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
+            Toast.makeText(this@MainActivity, getString(R.string.camera_access_error), Toast.LENGTH_SHORT).show()
         }
     }
 
