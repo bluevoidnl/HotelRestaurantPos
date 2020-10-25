@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
         <import type="android.view.View" />
-
+        <import type="com.spuyt.assignment.Resource" />
         <variable
             name="viewModel"
             type="com.spuyt.assignment.PixelateViewModel" />
@@ -58,11 +57,11 @@
 
             <View
                 android:id="@+id/scanline"
-                android:layout_width="4dp"
+                android:layout_width="3dp"
                 android:layout_height="match_parent"
                 android:background="@color/red"
                 android:translationX="@{viewModel.pixelationProgress}"
-                android:visibility="@{viewModel.pixelationProgress>0? View.VISIBLE: View.GONE}" />
+                android:visibility="@{viewModel.pixelatedImage instanceof Resource.Loading? View.VISIBLE: View.GONE}" />
         </FrameLayout>
 
     </LinearLayout>

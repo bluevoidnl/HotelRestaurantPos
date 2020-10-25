@@ -10,12 +10,9 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
-import android.util.SparseIntArray
 import androidx.databinding.DataBindingUtil
 import android.view.Surface
 import android.view.TextureView.SurfaceTextureListener
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -23,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.observe
 import com.spuyt.assignment.databinding.ActivityMainBinding
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,20 +32,8 @@ class MainActivity : AppCompatActivity() {
 
     private var cameraDevice: CameraDevice? = null
     private lateinit var imageDimension: Size
-
-    // todo: check HandlerThread : to coroutine?
     private var mBackgroundHandler: Handler? = null
     private var mBackgroundThread: HandlerThread? = null
-
-    // todo: make more kotlin style
-    private val ORIENTATIONS: SparseIntArray = SparseIntArray()
-
-    init {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90)
-        ORIENTATIONS.append(Surface.ROTATION_90, 0)
-        ORIENTATIONS.append(Surface.ROTATION_180, 270)
-        ORIENTATIONS.append(Surface.ROTATION_270, 180)
-    }
 
     private val textureListener: SurfaceTextureListener = object : SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
@@ -69,8 +53,6 @@ class MainActivity : AppCompatActivity() {
 
     private val stateCallback: CameraDevice.StateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
-            // This is called when the camera is open
-            Log.e(TAG, "onOpened")
             cameraDevice = camera
             createCameraPreview(camera)
         }
@@ -90,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.lifecycleOwner = this
-        binding.viewModel=viewModel
+        binding.viewModel = viewModel
 
         binding.texture.surfaceTextureListener = textureListener
         binding.btnTakepicture.setOnClickListener {
@@ -98,7 +80,19 @@ class MainActivity : AppCompatActivity() {
             viewModel.setPhotoBitmap(bitmap)
         }
 
-        viewModel.pixelatedImage.observe(this) { binding.pix.post { binding.pix.setImageBitmap(it) } }
+        viewModel.pixelatedImage.observe(this) {
+            when (it) {
+                is Resource.Success -> {
+                    binding.pix.post { binding.pix.setImageBitmap(it.data) }
+                }
+                is Resource.Loading -> {
+                    binding.pix.post { binding.pix.setImageBitmap(it.intermediateResult) }
+                }
+                is Resource.Error -> {
+                    Toast.makeText(this@MainActivity, "Error creating pixelated Image", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -167,13 +161,13 @@ class MainActivity : AppCompatActivity() {
             Log.i("xxx", "$imageDimension")
             val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             if (permission != PackageManager.PERMISSION_GRANTED) {
+                // obligatory permission check
                 return
             }
             manager.openCamera(cameraId, stateCallback, null)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
-        Log.e(TAG, "openCamera X")
     }
 
     fun createCameraPreview(camera: CameraDevice) {
@@ -185,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             captureRequestBuilder.addTarget(surface)
             camera.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                    //The camera is already closed
+                    // The camera is already closed
                     if (null == cameraDevice) {
                         return
                     }

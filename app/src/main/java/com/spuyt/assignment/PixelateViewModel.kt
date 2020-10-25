@@ -14,9 +14,8 @@ import kotlin.concurrent.thread
 
 class PixelateViewModel : ViewModel() {
 
-    val pixelatedImage = MutableLiveData<Bitmap>()
     val pixelationProgress = MutableLiveData<Int>()
-    //val pixelatedImage = MutableLiveData<Resource<Bitmap>>()
+    val pixelatedImage = MutableLiveData<Resource<Bitmap>>()
 
     private var lastPhotoBitmap: Bitmap? = null
     private var nrBlocks = 20
@@ -36,15 +35,12 @@ class PixelateViewModel : ViewModel() {
                 // todo: make lifecycle aware
                 // todo: cancel previous calculation when called again
                 val pixBitmap = pixelate(it, nrBlocks)
-                //pixelatedImage.postValue(Resource.Success(pixBitmap))
-                pixelatedImage.postValue(pixBitmap)
-                pixelationProgress.postValue(-1)
+                pixelatedImage.postValue(Resource.Success(pixBitmap))
             }
         }
     }
 
    private fun pixelate(image: Bitmap, nrBlocks: Int): Bitmap {
-        //BitmapFactory.decodeFile("assets/)
         val w = image.width
         val h = image.height
 
@@ -55,15 +51,13 @@ class PixelateViewModel : ViewModel() {
         val targetH = (h / blockSize)
         //println("$W $H $blockSize target $targetW $targetH")
         val targetImage = image.copy(Bitmap.Config.ARGB_8888, true)
-        // val targetImage = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         for (wIndex in 0 until targetW) {
             var endX=0
             for (hIndex in 0 until targetH+1) {
                  endX=createPixel(blockSize, wIndex, hIndex, image, targetImage)
             }
-            pixelatedImage.postValue(targetImage)
+            pixelatedImage.postValue(Resource.Loading(targetImage))
             pixelationProgress.postValue(endX)
-
         }
         return targetImage
     }
